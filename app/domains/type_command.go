@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"slices"
+	"strings"
 )
 
 type TypeCommand struct {
@@ -23,7 +24,25 @@ func (c *TypeCommand) GetName() string {
 func (c *TypeCommand) Execute(cmd Command) {
 	if slices.Contains(c.availableCommands, cmd.Args[0]) {
 		fmt.Fprintf(os.Stdout, "%s is a shell builtin\n", cmd.Args[0])
+	} else if path, exists := c.findBinInPath(cmd); exists {
+		fmt.Fprintf(os.Stdout, "%s is %s\n", cmd.Args[0], path)
 	} else {
 		fmt.Fprintf(os.Stdout, "%s: not found\n", cmd.Args[0])
 	}
+}
+
+func (c *TypeCommand) findBinInPath(cmd Command) (string, bool) {
+	paths := os.Getenv("PATH")
+	bin := cmd.Args[0]
+	for path := range strings.SplitSeq(paths, ":") {
+		file := path + "/" + bin
+		if fileInfo, err := os.Stat(file); err == nil {
+			mode := fileInfo.Mode()
+			if mode&0111 != 0 {
+				return file, true
+			}
+		}
+	}
+
+	return "", false
 }

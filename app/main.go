@@ -31,8 +31,8 @@ func handleCommand() {
 	// Register the `type` command
 	// It must be registered last to make sure detect correct supported command
 	// Need to append `type` command itself
-	supporedCmds := append(cmdRegistry.GetSupportedCmds(), "type")
-	typeCmd := domains.NewTypeCommand(supporedCmds)
+	supportedCmds := append(cmdRegistry.GetSupportedCmds(), "type")
+	typeCmd := domains.NewTypeCommand(supportedCmds)
 	cmdRegistry.Register(typeCmd)
 
 	cmdHandler.HandleCommand()
