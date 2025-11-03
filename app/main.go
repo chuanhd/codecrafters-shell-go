@@ -24,5 +24,9 @@ func handleCommand() {
 	exitCmd := &domains.ExitCommand{}
 	cmdRegistry.Register(exitCmd)
 
+	// Register the `echo` command
+	echoCmd := &domains.EchoCommand{}
+	cmdRegistry.Register(echoCmd)
+
 	cmdHandler.HandleCommand()
 }
