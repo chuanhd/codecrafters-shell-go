@@ -36,3 +36,11 @@ func (cr *CommandRegistry) Execute(cmd domains.Command) {
 		executor.Execute(cmd)
 	}
 }
+
+func (cr *CommandRegistry) GetSupportedCmds() []string {
+	var keys []string
+	for k := range cr.executors {
+		keys = append(keys, k)
+	}
+	return keys
+}
