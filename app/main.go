@@ -31,6 +31,9 @@ func handleCommand() {
 	pwdCmd := &domains.PwdCommand{}
 	cmdRegistry.Register(pwdCmd)
 
+	cdCmd := &domains.CdCommand{}
+	cmdRegistry.Register(cdCmd)
+
 	// Register the `type` command
 	// It must be registered last to make sure detect correct supported command
 	// Need to append `type` command itself
