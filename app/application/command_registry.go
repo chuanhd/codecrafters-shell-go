@@ -3,8 +3,10 @@ package application
 import (
 	"fmt"
 	"os"
+	"os/exec"
 
 	"github.com/codecrafters-io/shell-starter-go/app/domains"
+	"github.com/codecrafters-io/shell-starter-go/app/utils"
 )
 
 type CommandRegistry struct {
@@ -30,8 +32,19 @@ func (cr *CommandRegistry) Register(executor domains.CommandExecutor) {
 func (cr *CommandRegistry) Execute(cmd domains.Command) {
 	executor, exists := cr.executors[cmd.Name]
 	if !exists {
-		fmt.Fprintf(os.Stdout, "%s: command not found\n", cmd.Name)
-		// fmt.Fprintf(os.Stdout, "invalid_raspberry_command: command not found")
+		// Check for built in external program
+		if path, externalExists := utils.FindBinaryInPath(cmd.Name); externalExists {
+			externalCmd := exec.Command(cmd.Name, cmd.Args...)
+			output, execErr := externalCmd.Output()
+			if execErr != nil {
+				fmt.Fprintf(os.Stderr, "Error executing file at %s: %v", path, cmd.Args)
+			} else {
+				fmt.Fprint(os.Stdout, string(output))
+			}
+		} else {
+			fmt.Fprintf(os.Stdout, "%s: command not found\n", cmd.Name)
+		}
+
 	} else {
 		executor.Execute(cmd)
 	}
