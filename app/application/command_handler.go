@@ -29,7 +29,5 @@ func (ch *CommandHandler) HandleCommand() {
 		}
 
 		ch.registry.Execute(*cmd)
-
-		// reader.Reset(os.Stdin)
 	}
 }
