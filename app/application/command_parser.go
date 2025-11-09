@@ -26,6 +26,37 @@ const (
 	Escaped                        // 1000
 )
 
+const (
+	CharSingleQuote = '\''
+	CharDoubleQuote = '"'
+	CharEscape      = '\\'
+	CharSpace       = ' '
+	CharTab         = '\t'
+)
+
+func extractCommandAndArgs(content string) (cmd, argumentStr string) {
+	if len(content) == 0 {
+		return "", ""
+	}
+
+	first := rune(content[0])
+	if first != CharSingleQuote && first != CharDoubleQuote {
+		cmd, argumentStr, _ = strings.Cut(content, " ")
+		return
+	}
+
+	endIdx := strings.IndexRune(content[1:], first)
+	if endIdx == -1 {
+		cmd, argumentStr, _ = strings.Cut(content, " ")
+		return
+	}
+
+	endIdx += 1
+	cmd = content[1:endIdx]
+	argumentStr = content[endIdx+1:]
+	return
+}
+
 func tokenize(s string) ([]string, error) {
 	state := Unquoted
 	var tok []string
@@ -38,13 +69,6 @@ func tokenize(s string) ([]string, error) {
 		}
 	}
 
-	// Special character to avoid typo
-	singleQuote := '\''
-	doubleQuote := '"'
-	escape := '\\'
-	space := ' '
-	tab := '\t'
-
 	stringAsRunes := []rune(s)
 	inEscape := false
 	for i := 0; i < len(stringAsRunes); i++ {
@@ -52,26 +76,26 @@ func tokenize(s string) ([]string, error) {
 		switch state {
 		case Unquoted:
 			switch c {
-			case space, tab:
+			case CharSpace, CharTab:
 				flush()
-			case singleQuote:
+			case CharSingleQuote:
 				state = SingleQuoted // change state from Unquoted to SingleQuoted
-			case doubleQuote:
+			case CharDoubleQuote:
 				state = DoubleQuoted // change state from Unquoted to DoubleQuoted
 				inEscape = false
-			case escape:
+			case CharEscape:
 				// escape next character if exists
 				if i+1 < len(s) {
 					buf = append(buf, stringAsRunes[i+1])
 					i++ // skip next char
 				} else {
-					buf = append(buf, escape)
+					buf = append(buf, CharEscape)
 				}
 			default:
 				buf = append(buf, c) // Append normal character to buffer
 			}
 		case SingleQuoted:
-			if c == singleQuote {
+			if c == CharSingleQuote {
 				state = Unquoted // Closed single quoted. Change state from SingleQuoted to Unquoted
 			} else {
 				buf = append(buf, c) // Inside single quote, append character to buffer
@@ -79,10 +103,8 @@ func tokenize(s string) ([]string, error) {
 		case DoubleQuoted:
 			if inEscape {
 				switch c {
-				case '"', '\\':
+				case CharDoubleQuote, CharEscape:
 					buf = append(buf, c)
-				case '\n':
-					// drop both for line-continuation
 				default:
 					// keep backslash literally if not one of the four
 					buf = append(buf, '\\', c)
@@ -91,9 +113,9 @@ func tokenize(s string) ([]string, error) {
 				continue
 			}
 			switch c {
-			case doubleQuote:
+			case CharDoubleQuote:
 				state = Unquoted
-			case escape:
+			case CharEscape:
 				inEscape = true
 			default:
 				buf = append(buf, c)
@@ -115,7 +137,7 @@ func (parser *CommandParser) ParseCommand() (*domains.Command, error) {
 		return nil, err
 	}
 
-	cmd, argumentStr, _ := strings.Cut(strings.TrimSpace(content), " ")
+	cmd, argumentStr := extractCommandAndArgs(strings.TrimSpace(content))
 	args, err := tokenize(argumentStr)
 
 	if err != nil {
