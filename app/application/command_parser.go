@@ -22,6 +22,7 @@ type State int
 const (
 	Unquoted State = iota
 	SingleQuoted
+	DoubleQuoted
 )
 
 func tokenize(s string) ([]string, error) {
@@ -37,6 +38,7 @@ func tokenize(s string) ([]string, error) {
 	}
 
 	singleQuote := '\''
+	doubleQuote := '"'
 	for _, c := range s {
 		switch state {
 		case Unquoted:
@@ -44,15 +46,23 @@ func tokenize(s string) ([]string, error) {
 			case ' ', '\t':
 				flush()
 			case singleQuote:
-				state = SingleQuoted
+				state = SingleQuoted // change state from Unquoted to SingleQuoted
+			case doubleQuote:
+				state = DoubleQuoted // change state from Unquoted to DoubleQuoted
 			default:
-				buf = append(buf, c)
+				buf = append(buf, c) // Append normal character to buffer
 			}
 		case SingleQuoted:
 			if c == singleQuote {
-				state = Unquoted
+				state = Unquoted // Closed single quoted. Change state from SingleQuoted to Unquoted
 			} else {
-				buf = append(buf, c)
+				buf = append(buf, c) // Inside single quote, append character to buffer
+			}
+		case DoubleQuoted:
+			if c == doubleQuote {
+				state = Unquoted // Closed double quoted. Change state from DoubleQuoted to Unquoted
+			} else {
+				buf = append(buf, c) // Inside single quote, append character to buffer
 			}
 		}
 	}
