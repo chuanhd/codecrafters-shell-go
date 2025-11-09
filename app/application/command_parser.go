@@ -37,9 +37,15 @@ func tokenize(s string) ([]string, error) {
 		}
 	}
 
+	// Special character to avoid typo
 	singleQuote := '\''
 	doubleQuote := '"'
-	for _, c := range s {
+	escape := '\\'
+
+	stringAsRunes := []rune(s)
+	inEscape := false
+	for i := 0; i < len(stringAsRunes); i++ {
+		c := stringAsRunes[i]
 		switch state {
 		case Unquoted:
 			switch c {
@@ -49,6 +55,15 @@ func tokenize(s string) ([]string, error) {
 				state = SingleQuoted // change state from Unquoted to SingleQuoted
 			case doubleQuote:
 				state = DoubleQuoted // change state from Unquoted to DoubleQuoted
+				inEscape = false
+			case escape:
+				// escape next character if exists
+				if i+1 < len(s) {
+					buf = append(buf, stringAsRunes[i+1])
+					i++ // skip next char
+				} else {
+					buf = append(buf, escape)
+				}
 			default:
 				buf = append(buf, c) // Append normal character to buffer
 			}
@@ -59,15 +74,23 @@ func tokenize(s string) ([]string, error) {
 				buf = append(buf, c) // Inside single quote, append character to buffer
 			}
 		case DoubleQuoted:
-			if c == doubleQuote {
-				state = Unquoted // Closed double quoted. Change state from DoubleQuoted to Unquoted
-			} else {
-				buf = append(buf, c) // Inside single quote, append character to buffer
+			if inEscape {
+				buf = append(buf, '\\', c)
+				inEscape = false
+				continue
+			}
+			switch c {
+			case doubleQuote:
+				state = Unquoted
+			case escape:
+				inEscape = true
+			default:
+				buf = append(buf, c)
 			}
 		}
 	}
-	if state == SingleQuoted {
-		return nil, fmt.Errorf("Unmached '")
+	if state == SingleQuoted || state == DoubleQuoted {
+		return nil, fmt.Errorf("Unmatched")
 	}
 	flush()
 

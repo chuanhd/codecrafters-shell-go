@@ -38,6 +38,11 @@ func (cr *CommandRegistry) Execute(cmd domains.Command) {
 			output, execErr := externalCmd.Output()
 			if execErr != nil {
 				fmt.Fprintf(os.Stderr, "Error executing file at %s: %v", path, cmd.Args)
+				if exitError, ok := execErr.(*exec.ExitError); ok {
+					fmt.Printf("Command exited with non-zero status: %d\n", exitError.ExitCode())
+				} else {
+					fmt.Printf("Command failed with error: %v\n", exitError)
+				}
 			} else {
 				fmt.Fprint(os.Stdout, string(output))
 			}
