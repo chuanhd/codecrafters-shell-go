@@ -20,9 +20,10 @@ func NewCommandParser(reader *bufio.Reader) *CommandParser {
 type State int
 
 const (
-	Unquoted State = iota
-	SingleQuoted
-	DoubleQuoted
+	Unquoted     State = 1 << iota // 0001
+	SingleQuoted                   // 0010
+	DoubleQuoted                   // 0100
+	Escaped                        // 1000
 )
 
 func tokenize(s string) ([]string, error) {
@@ -41,6 +42,8 @@ func tokenize(s string) ([]string, error) {
 	singleQuote := '\''
 	doubleQuote := '"'
 	escape := '\\'
+	space := ' '
+	tab := '\t'
 
 	stringAsRunes := []rune(s)
 	inEscape := false
@@ -49,7 +52,7 @@ func tokenize(s string) ([]string, error) {
 		switch state {
 		case Unquoted:
 			switch c {
-			case ' ', '\t':
+			case space, tab:
 				flush()
 			case singleQuote:
 				state = SingleQuoted // change state from Unquoted to SingleQuoted
@@ -75,7 +78,15 @@ func tokenize(s string) ([]string, error) {
 			}
 		case DoubleQuoted:
 			if inEscape {
-				buf = append(buf, '\\', c)
+				switch c {
+				case '"', '\\':
+					buf = append(buf, c)
+				case '\n':
+					// drop both for line-continuation
+				default:
+					// keep backslash literally if not one of the four
+					buf = append(buf, '\\', c)
+				}
 				inEscape = false
 				continue
 			}
