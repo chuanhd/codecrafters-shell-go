@@ -2,7 +2,6 @@ package domains
 
 import (
 	"fmt"
-	"os"
 	"strings"
 )
 
@@ -13,5 +12,5 @@ func (c *EchoCommand) GetName() string {
 }
 
 func (c *EchoCommand) Execute(cmd Command) {
-	fmt.Fprintln(os.Stdout, strings.Join(cmd.Args, " "))
+	fmt.Fprintln(cmd.Writer, strings.Join(cmd.Args, " "))
 }
