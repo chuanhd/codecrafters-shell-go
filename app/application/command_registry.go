@@ -31,8 +31,9 @@ func (cr *CommandRegistry) Register(executor domains.CommandExecutor) {
 
 func (cr *CommandRegistry) Execute(cmd domains.Command) {
 	executor, exists := cr.executors[cmd.Name]
-	args, outPath, err := cr.handleStdOut(cmd.Args)
+	args, outPath, errPath, err := cr.handleStdOut(cmd.Args)
 	outWriter := os.Stdout
+	errWriter := os.Stderr
 
 	if outPath != "" {
 		f, err := os.OpenFile(outPath, os.O_CREATE|os.O_RDWR, 0644)
@@ -42,9 +43,17 @@ func (cr *CommandRegistry) Execute(cmd domains.Command) {
 		}
 		defer f.Close()
 		outWriter = f
-	} else {
-		outWriter = os.Stdout
 	}
+
+	if errPath != "" {
+		f, err := os.OpenFile(errPath, os.O_CREATE|os.O_RDWR, 0644)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Open target file failed with error: %v\n", err)
+		}
+		defer f.Close()
+		errWriter = f
+	}
+
 	cmd.Args = args
 
 	if !exists {
@@ -56,7 +65,7 @@ func (cr *CommandRegistry) Execute(cmd domains.Command) {
 			}
 			externalCmd := exec.Command(cmd.Name, args...)
 			externalCmd.Stdout = outWriter
-			externalCmd.Stderr = os.Stderr
+			externalCmd.Stderr = errWriter
 
 			externalCmd.Run()
 		} else {
@@ -65,6 +74,7 @@ func (cr *CommandRegistry) Execute(cmd domains.Command) {
 
 	} else {
 		cmd.Writer = outWriter
+		cmd.ErrWriter = errWriter
 		executor.Execute(cmd)
 	}
 }
@@ -77,19 +87,25 @@ func (cr *CommandRegistry) GetSupportedCmds() []string {
 	return keys
 }
 
-func (cr *CommandRegistry) handleStdOut(rawArgs []string) (args []string, outPath string, err error) {
+func (cr *CommandRegistry) handleStdOut(rawArgs []string) (args []string, outPath string, errPath string, err error) {
 	for i := 0; i < len(rawArgs); i++ {
 		switch rawArgs[i] {
 		case ">", "1>":
 			if i+1 > len(rawArgs) {
-				return nil, "", fmt.Errorf("syntax error: missing filename after %q", rawArgs[i])
+				return nil, "", "", fmt.Errorf("syntax error: missing filename after %q", rawArgs[i])
 			}
 			outPath = rawArgs[i+1]
+			i++ // skip filename
+		case "2>":
+			if i+1 > len(rawArgs) {
+				return nil, "", "", fmt.Errorf("syntax error: missing filename after %q", rawArgs[i])
+			}
+			errPath = rawArgs[i+1]
 			i++ // skip filename
 		default:
 			args = append(args, rawArgs[i])
 		}
 	}
 
-	return args, outPath, nil
+	return args, outPath, errPath, nil
 }

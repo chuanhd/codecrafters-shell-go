@@ -3,9 +3,10 @@ package domains
 import "io"
 
 type Command struct {
-	Name   string
-	Args   []string
-	Writer io.Writer
+	Name      string
+	Args      []string
+	Writer    io.Writer
+	ErrWriter io.Writer
 }
 
 type CommandExecutor interface {
