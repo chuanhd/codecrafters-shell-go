@@ -130,6 +130,52 @@ func tokenize(s string) ([]string, error) {
 	return tok, nil
 }
 
+func parseCmdAndRedirectArgs(rawArgs []string) (*domains.RedirectArgument, []string, error) {
+	outPath, errPath := "", ""
+	needAppend := false
+	var args []string
+	for i := 0; i < len(rawArgs); i++ {
+		switch rawArgs[i] {
+		case ">", "1>":
+			if i+1 > len(rawArgs) {
+				return nil, args, fmt.Errorf("syntax error: missing filename after %q", rawArgs[i])
+			}
+			outPath = rawArgs[i+1]
+			needAppend = false
+			i++ // skip filename
+		case ">>", "1>>":
+			if i+1 > len(rawArgs) {
+				return nil, args, fmt.Errorf("syntax error: missing filename after %q", rawArgs[i])
+			}
+			outPath = rawArgs[i+1]
+			needAppend = true
+			i++ // skip filename
+		case "2>":
+			if i+1 > len(rawArgs) {
+				return nil, args, fmt.Errorf("syntax error: missing filename after %q", rawArgs[i])
+			}
+			errPath = rawArgs[i+1]
+			needAppend = false
+			i++ // skip filename
+		case "2>>":
+			if i+1 > len(rawArgs) {
+				return nil, args, fmt.Errorf("syntax error: missing filename after %q", rawArgs[i])
+			}
+			errPath = rawArgs[i+1]
+			needAppend = true
+			i++ // skip filename
+		default:
+			args = append(args, rawArgs[i])
+		}
+	}
+
+	return &domains.RedirectArgument{
+		StdOutPath:   outPath,
+		StdErrPath:   errPath,
+		StdOutAppend: needAppend,
+	}, args, nil
+}
+
 func (parser *CommandParser) ParseCommand() (*domains.Command, error) {
 	content, err := parser.reader.ReadString('\n')
 	if err != nil {
@@ -139,6 +185,7 @@ func (parser *CommandParser) ParseCommand() (*domains.Command, error) {
 
 	cmd, argumentStr := extractCommandAndArgs(strings.TrimSpace(content))
 	args, err := tokenize(argumentStr)
+	redirectArgs, cmdArgs, err := parseCmdAndRedirectArgs(args)
 
 	if err != nil {
 		fmt.Fprint(os.Stderr, "ERROR: "+err.Error())
@@ -146,7 +193,10 @@ func (parser *CommandParser) ParseCommand() (*domains.Command, error) {
 	}
 
 	return &domains.Command{
-		Name: cmd,
-		Args: args,
+		Name:        cmd,
+		Args:        cmdArgs,
+		Writer:      os.Stdout,
+		ErrWriter:   os.Stderr,
+		RedirectArg: *redirectArgs,
 	}, nil
 }

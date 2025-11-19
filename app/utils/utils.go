@@ -32,3 +32,17 @@ func FileExists(filePath string) bool {
 
 	return false
 }
+
+func OpenRedirectFile(path string, needAppend bool) (*os.File, error) {
+	flags := os.O_CREATE | os.O_RDWR
+	if needAppend {
+		flags |= os.O_APPEND
+	} else {
+		flags |= os.O_TRUNC
+	}
+	f, err := os.OpenFile(path, flags, 0644)
+	if err != nil {
+		return nil, err
+	}
+	return f, nil
+}

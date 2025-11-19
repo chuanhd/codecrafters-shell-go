@@ -28,6 +28,6 @@ func (ch *CommandHandler) HandleCommand() {
 			continue
 		}
 
-		ch.registry.Execute(*cmd)
+		ch.registry.Execute(cmd)
 	}
 }

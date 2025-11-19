@@ -11,7 +11,7 @@ func (c *CdCommand) GetName() string {
 	return "cd"
 }
 
-func (c *CdCommand) Execute(cmd Command) {
+func (c *CdCommand) Execute(cmd *Command) {
 	path := cmd.Args[0]
 	if path == "~" {
 		homeDir, _err := os.UserHomeDir()

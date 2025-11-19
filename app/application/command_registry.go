@@ -3,7 +3,6 @@ package application
 import (
 	"fmt"
 	"os"
-	"os/exec"
 
 	"github.com/codecrafters-io/shell-starter-go/app/domains"
 	"github.com/codecrafters-io/shell-starter-go/app/utils"
@@ -29,52 +28,43 @@ func (cr *CommandRegistry) Register(executor domains.CommandExecutor) {
 	cr.executors[name] = executor
 }
 
-func (cr *CommandRegistry) Execute(cmd domains.Command) {
-	executor, exists := cr.executors[cmd.Name]
-	args, outPath, errPath, err := cr.handleStdOut(cmd.Args)
-	outWriter := os.Stdout
-	errWriter := os.Stderr
+func (cr *CommandRegistry) Execute(cmd *domains.Command) {
+	_, redirectArgs := cmd.Args, cmd.RedirectArg
 
-	if outPath != "" {
-		f, err := os.OpenFile(outPath, os.O_CREATE|os.O_RDWR, 0644)
+	if redirectArgs.StdOutPath != "" {
+		f, err := utils.OpenRedirectFile(redirectArgs.StdOutPath, redirectArgs.StdOutAppend)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Open target file failed with error: %v\n", err)
 			return
 		}
 		defer f.Close()
-		outWriter = f
+		cmd.Writer = f
+	} else {
+		cmd.Writer = os.Stdout
 	}
 
-	if errPath != "" {
-		f, err := os.OpenFile(errPath, os.O_CREATE|os.O_RDWR, 0644)
+	if redirectArgs.StdErrPath != "" {
+		f, err := utils.OpenRedirectFile(redirectArgs.StdErrPath, redirectArgs.StdOutAppend)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Open target file failed with error: %v\n", err)
 		}
 		defer f.Close()
-		errWriter = f
+		cmd.ErrWriter = f
+	} else {
+		cmd.ErrWriter = os.Stderr
 	}
 
-	cmd.Args = args
+	executor, exists := cr.executors[cmd.Name]
 
 	if !exists {
 		// Check for built in external program
 		if _, externalExists := utils.FindBinaryInPath(cmd.Name); externalExists {
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Command failed with error: %v\n", err)
-				return
-			}
-			externalCmd := exec.Command(cmd.Name, args...)
-			externalCmd.Stdout = outWriter
-			externalCmd.Stderr = errWriter
-
-			externalCmd.Run()
+			builtInExecutor, _ := cr.executors["external-built-in"]
+			builtInExecutor.Execute(cmd)
 		} else {
 			fmt.Fprintf(os.Stdout, "%s: command not found\n", cmd.Name)
 		}
-
 	} else {
-		cmd.Writer = outWriter
-		cmd.ErrWriter = errWriter
 		executor.Execute(cmd)
 	}
 }
@@ -85,27 +75,4 @@ func (cr *CommandRegistry) GetSupportedCmds() []string {
 		keys = append(keys, k)
 	}
 	return keys
-}
-
-func (cr *CommandRegistry) handleStdOut(rawArgs []string) (args []string, outPath string, errPath string, err error) {
-	for i := 0; i < len(rawArgs); i++ {
-		switch rawArgs[i] {
-		case ">", "1>":
-			if i+1 > len(rawArgs) {
-				return nil, "", "", fmt.Errorf("syntax error: missing filename after %q", rawArgs[i])
-			}
-			outPath = rawArgs[i+1]
-			i++ // skip filename
-		case "2>":
-			if i+1 > len(rawArgs) {
-				return nil, "", "", fmt.Errorf("syntax error: missing filename after %q", rawArgs[i])
-			}
-			errPath = rawArgs[i+1]
-			i++ // skip filename
-		default:
-			args = append(args, rawArgs[i])
-		}
-	}
-
-	return args, outPath, errPath, nil
 }
