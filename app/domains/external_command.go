@@ -4,13 +4,13 @@ import (
 	"os/exec"
 )
 
-type BuiltInCommand struct{}
+type ExternalCommand struct{}
 
-func (c *BuiltInCommand) GetName() string {
+func (c *ExternalCommand) GetName() string {
 	return "external-built-in"
 }
 
-func (c *BuiltInCommand) Execute(cmd *Command) {
+func (c *ExternalCommand) Execute(cmd *Command) {
 	externalCmd := exec.Command(cmd.Name, cmd.Args...)
 	externalCmd.Stdout = cmd.Writer
 	externalCmd.Stderr = cmd.ErrWriter

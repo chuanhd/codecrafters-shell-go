@@ -1,19 +1,19 @@
 package application
 
 import (
-	"bufio"
 	"fmt"
 	"os"
 	"strings"
 
+	"github.com/chzyer/readline"
 	"github.com/codecrafters-io/shell-starter-go/app/domains"
 )
 
 type CommandParser struct {
-	reader *bufio.Reader
+	reader *readline.Instance
 }
 
-func NewCommandParser(reader *bufio.Reader) *CommandParser {
+func NewCommandParser(reader *readline.Instance) *CommandParser {
 	return &CommandParser{reader: reader}
 }
 
@@ -177,7 +177,7 @@ func parseCmdAndRedirectArgs(rawArgs []string) (*domains.RedirectArgument, []str
 }
 
 func (parser *CommandParser) ParseCommand() (*domains.Command, error) {
-	content, err := parser.reader.ReadString('\n')
+	content, err := parser.reader.Readline()
 	if err != nil {
 		fmt.Fprint(os.Stderr, "ERROR: "+err.Error())
 		return nil, err

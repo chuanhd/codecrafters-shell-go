@@ -2,9 +2,30 @@ package utils
 
 import (
 	"errors"
+	"io/fs"
 	"os"
 	"strings"
 )
+
+func ListAllBinariesInPath() []string {
+	paths := os.Getenv("PATH")
+	var binaries []string
+	for path := range strings.SplitSeq(paths, ":") {
+		entries, err := os.ReadDir(path)
+		if err != nil {
+			continue
+		}
+		infos := make([]fs.FileInfo, 0, len(entries))
+		for _, fileInfo := range infos {
+			mode := fileInfo.Mode()
+			if mode&0111 != 0 {
+				binaries = append(binaries, fileInfo.Name())
+			}
+		}
+	}
+
+	return binaries
+}
 
 func FindBinaryInPath(cmd string) (string, bool) {
 	paths := os.Getenv("PATH")

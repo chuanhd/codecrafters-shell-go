@@ -1,7 +1,6 @@
 package domains
 
 import (
-	"fmt"
 	"os"
 	"strconv"
 )
@@ -13,9 +12,12 @@ func (c *ExitCommand) GetName() string {
 }
 
 func (c *ExitCommand) Execute(cmd *Command) {
-	exitCode, err := strconv.Atoi(cmd.Args[0])
-	if err != nil {
-		fmt.Println("Error parsing exit code: ", err)
+	if len(cmd.Args) > 0 {
+		exitCode, err := strconv.Atoi(cmd.Args[0])
+		if err != nil {
+			exitCode = 0
+		}
+		os.Exit(exitCode)
 	}
-	os.Exit(exitCode)
+	os.Exit(0)
 }

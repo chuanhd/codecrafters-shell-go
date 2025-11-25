@@ -72,6 +72,10 @@ func (cr *CommandRegistry) Execute(cmd *domains.Command) {
 func (cr *CommandRegistry) GetSupportedCmds() []string {
 	var keys []string
 	for k := range cr.executors {
+		// Ignore external built-in command
+		if k == "external-built-in" {
+			continue
+		}
 		keys = append(keys, k)
 	}
 	return keys

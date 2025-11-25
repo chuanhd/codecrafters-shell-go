@@ -41,7 +41,7 @@ func handleCommand() {
 	typeCmd := domains.NewTypeCommand(supportedCmds)
 	cmdRegistry.Register(typeCmd)
 
-	builtInCmd := &domains.BuiltInCommand{}
+	builtInCmd := &domains.ExternalCommand{}
 	cmdRegistry.Register(builtInCmd)
 
 	cmdHandler.HandleCommand()
