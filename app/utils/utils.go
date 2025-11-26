@@ -16,6 +16,11 @@ func ListAllBinariesInPath() []string {
 			continue
 		}
 		infos := make([]fs.FileInfo, 0, len(entries))
+		for _, e := range entries {
+			info, _ := e.Info()
+			infos = append(infos, info)
+		}
+
 		for _, fileInfo := range infos {
 			mode := fileInfo.Mode()
 			if mode&0111 != 0 {
