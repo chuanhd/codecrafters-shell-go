@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io/fs"
 	"os"
+	"slices"
 	"strings"
 )
 
@@ -71,4 +72,19 @@ func OpenRedirectFile(path string, needAppend bool) (*os.File, error) {
 		return nil, err
 	}
 	return f, nil
+}
+
+func DedupeStrings(items []string) []string {
+	seen := make(map[string]struct{})
+	for _, it := range items {
+		seen[it] = struct{}{}
+	}
+
+	out := make([]string, 0, len(seen))
+	for k := range seen {
+		out = append(out, k)
+	}
+
+	slices.Sort(out)
+	return out
 }

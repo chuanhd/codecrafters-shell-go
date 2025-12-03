@@ -9,13 +9,45 @@ import (
 
 type bellCompleter struct {
 	inner readline.AutoCompleter
+
+	tabCount int
 }
 
 func (b *bellCompleter) Do(line []rune, pos int) ([][]rune, int) {
 	items, length := b.inner.Do(line, pos)
-	if len(items) == 0 {
+
+	if len(items) > 1 {
+		b.tabCount += 1
+		switch b.tabCount {
+		case 1:
+			fmt.Print("\a")
+
+			return nil, 0
+		case 2:
+			fmt.Println()
+			for i, m := range items {
+				if i > 0 {
+					fmt.Print(" ")
+				}
+				fmt.Printf("%s%s", string(line), string(m))
+			}
+
+			fmt.Println()
+
+			fmt.Print("\r\x1b[2K")
+			fmt.Print("$ ")
+			fmt.Print(string(line))
+
+			return nil, 0
+		}
+
+	} else if len(items) == 0 {
 		fmt.Print("\a")
+		return nil, 0
 	}
+
+	b.tabCount = 0
+
 	return items, length
 }
 
@@ -32,8 +64,10 @@ func NewCommandHandler(registry *CommandRegistry) *CommandHandler {
 func (ch *CommandHandler) HandleCommand() {
 	var externalBinaries = utils.ListAllBinariesInPath()
 	var builtins = ch.registry.GetSupportedCmds()
+	var allCmds = append(externalBinaries, builtins...)
+	allCmds = utils.DedupeStrings(allCmds)
 	baseCompleter := readline.NewPrefixCompleter(readline.PcItemDynamic(func(string) []string {
-		return append(builtins, externalBinaries...)
+		return allCmds
 	}))
 
 	completer := &bellCompleter{
