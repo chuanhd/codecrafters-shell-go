@@ -20,6 +20,12 @@ func (b *bellCompleter) Do(line []rune, pos int) ([][]rune, int) {
 		b.tabCount += 1
 		switch b.tabCount {
 		case 1:
+			lcp := utils.LongestCommonPrefix(items)
+			if len(lcp) > 0 {
+				b.tabCount = 0
+				return [][]rune{lcp}, length
+			}
+
 			fmt.Print("\a")
 
 			return nil, 0

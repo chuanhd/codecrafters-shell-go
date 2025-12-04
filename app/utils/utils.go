@@ -88,3 +88,31 @@ func DedupeStrings(items []string) []string {
 	slices.Sort(out)
 	return out
 }
+
+func LongestCommonPrefix(items [][]rune) []rune {
+	if len(items) == 0 {
+		return []rune("")
+	}
+
+	if len(items) == 1 {
+		return items[0]
+	}
+
+	minLength := len(items[0])
+
+	for _, element := range items {
+		if len(element) < minLength {
+			minLength = len(element)
+		}
+	}
+
+	for i := range minLength {
+		for _, element := range items {
+			if element[i] != items[0][i] {
+				return element[:i]
+			}
+		}
+	}
+
+	return items[0]
+}
