@@ -14,6 +14,7 @@ func (c *ExternalCommand) Execute(cmd *Command) {
 	externalCmd := exec.Command(cmd.Name, cmd.Args...)
 	externalCmd.Stdout = cmd.Writer
 	externalCmd.Stderr = cmd.ErrWriter
+	externalCmd.Stdin = cmd.Stdin
 
 	externalCmd.Run()
 }

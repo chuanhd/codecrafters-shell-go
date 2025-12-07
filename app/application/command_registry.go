@@ -39,7 +39,7 @@ func (cr *CommandRegistry) Execute(cmd *domains.Command) {
 		}
 		defer f.Close()
 		cmd.Writer = f
-	} else {
+	} else if cmd.Writer == nil {
 		cmd.Writer = os.Stdout
 	}
 
@@ -52,6 +52,10 @@ func (cr *CommandRegistry) Execute(cmd *domains.Command) {
 		cmd.ErrWriter = f
 	} else {
 		cmd.ErrWriter = os.Stderr
+	}
+
+	if cmd.Stdin == nil {
+		cmd.Stdin = os.Stdin
 	}
 
 	executor, exists := cr.executors[cmd.Name]

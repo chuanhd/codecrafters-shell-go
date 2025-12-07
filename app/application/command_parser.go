@@ -176,27 +176,38 @@ func parseCmdAndRedirectArgs(rawArgs []string) (*domains.RedirectArgument, []str
 	}, args, nil
 }
 
-func (parser *CommandParser) ParseCommand() (*domains.Command, error) {
+func (parser *CommandParser) ParseCommand() ([]domains.Command, error) {
 	content, err := parser.reader.Readline()
 	if err != nil {
 		fmt.Fprint(os.Stderr, "ERROR: "+err.Error())
 		return nil, err
 	}
 
-	cmd, argumentStr := extractCommandAndArgs(strings.TrimSpace(content))
-	args, err := tokenize(argumentStr)
-	redirectArgs, cmdArgs, err := parseCmdAndRedirectArgs(args)
+	parts := strings.Split(content, "|")
 
-	if err != nil {
-		fmt.Fprint(os.Stderr, "ERROR: "+err.Error())
-		return nil, err
+	var cmds []domains.Command
+
+	for _, part := range parts {
+		cmdName, argumentStr := extractCommandAndArgs(strings.TrimSpace(part))
+		args, err := tokenize(argumentStr)
+		redirectArgs, cmdArgs, err := parseCmdAndRedirectArgs(args)
+
+		if err != nil {
+			fmt.Fprint(os.Stderr, "ERROR: "+err.Error())
+			return nil, err
+		}
+
+		cmd := domains.Command{
+			Name:        cmdName,
+			Args:        cmdArgs,
+			Stdin:       os.Stdin,
+			Writer:      os.Stdout,
+			ErrWriter:   os.Stderr,
+			RedirectArg: *redirectArgs,
+		}
+
+		cmds = append(cmds, cmd)
 	}
 
-	return &domains.Command{
-		Name:        cmd,
-		Args:        cmdArgs,
-		Writer:      os.Stdout,
-		ErrWriter:   os.Stderr,
-		RedirectArg: *redirectArgs,
-	}, nil
+	return cmds, nil
 }

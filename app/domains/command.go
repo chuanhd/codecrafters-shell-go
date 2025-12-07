@@ -7,9 +7,11 @@ import (
 type Command struct {
 	Name        string
 	Args        []string
-	Writer      io.Writer
-	ErrWriter   io.Writer
 	RedirectArg RedirectArgument
+
+	Stdin     io.Reader
+	Writer    io.Writer
+	ErrWriter io.Writer
 }
 
 type CommandExecutor interface {

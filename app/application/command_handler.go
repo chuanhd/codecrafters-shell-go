@@ -2,8 +2,11 @@ package application
 
 import (
 	"fmt"
+	"io"
+	"sync"
 
 	"github.com/chzyer/readline"
+	"github.com/codecrafters-io/shell-starter-go/app/domains"
 	"github.com/codecrafters-io/shell-starter-go/app/utils"
 )
 
@@ -92,11 +95,42 @@ func (ch *CommandHandler) HandleCommand() {
 	parser := NewCommandParser(rl)
 
 	for {
-		cmd, err := parser.ParseCommand()
+		cmds, err := parser.ParseCommand()
 		if err != nil {
 			continue
 		}
 
-		ch.registry.Execute(cmd)
+		switch len(cmds) {
+		case 0:
+			continue
+		case 1:
+			ch.registry.Execute(&cmds[0])
+		case 2:
+			ch.runDualPipeline(&cmds[0], &cmds[1])
+		default:
+			continue
+		}
+
 	}
+}
+
+func (ch *CommandHandler) runDualPipeline(left, right *domains.Command) {
+	pr, pw := io.Pipe()
+
+	left.Writer = pw
+
+	right.Stdin = pr
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		ch.registry.Execute(left)
+		pw.Close()
+	}()
+
+	ch.registry.Execute(right)
+	pr.Close()
+
+	wg.Wait()
 }
