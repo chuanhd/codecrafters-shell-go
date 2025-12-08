@@ -23,11 +23,11 @@ func (c *TypeCommand) GetName() string {
 
 func (c *TypeCommand) Execute(cmd *Command) {
 	if slices.Contains(c.availableCommands, cmd.Args[0]) {
-		fmt.Fprintf(os.Stdout, "%s is a shell builtin\n", cmd.Args[0])
+		fmt.Fprintf(cmd.Writer, "%s is a shell builtin\n", cmd.Args[0])
 	} else if path, exists := c.findBinInPath(*cmd); exists {
-		fmt.Fprintf(os.Stdout, "%s is %s\n", cmd.Args[0], path)
+		fmt.Fprintf(cmd.Writer, "%s is %s\n", cmd.Args[0], path)
 	} else {
-		fmt.Fprintf(os.Stdout, "%s: not found\n", cmd.Args[0])
+		fmt.Fprintf(cmd.Writer, "%s: not found\n", cmd.Args[0])
 	}
 }
 

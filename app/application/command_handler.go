@@ -2,13 +2,18 @@ package application
 
 import (
 	"fmt"
-	"io"
+	"os"
 	"sync"
 
 	"github.com/chzyer/readline"
 	"github.com/codecrafters-io/shell-starter-go/app/domains"
 	"github.com/codecrafters-io/shell-starter-go/app/utils"
 )
+
+type pipeEnds struct {
+	r *os.File
+	w *os.File
+}
 
 type bellCompleter struct {
 	inner readline.AutoCompleter
@@ -105,32 +110,60 @@ func (ch *CommandHandler) HandleCommand() {
 			continue
 		case 1:
 			ch.registry.Execute(&cmds[0])
-		case 2:
-			ch.runDualPipeline(&cmds[0], &cmds[1])
 		default:
-			continue
+			cmdPtrs := make([]*domains.Command, len(cmds))
+			for i := range cmds {
+				cmdPtrs[i] = &cmds[i]
+			}
+
+			ch.runPipeline(cmdPtrs)
 		}
 
 	}
 }
 
-func (ch *CommandHandler) runDualPipeline(left, right *domains.Command) {
-	pr, pw := io.Pipe()
+func (ch *CommandHandler) runPipeline(cmds []*domains.Command) {
+	numsOfCmd := len(cmds)
 
-	left.Writer = pw
+	pipes := make([]pipeEnds, numsOfCmd-1)
+	for i := range numsOfCmd - 1 {
+		pr, pw, err := os.Pipe()
+		if err != nil {
+			return
+		}
+		pipes[i] = pipeEnds{r: pr, w: pw}
+	}
 
-	right.Stdin = pr
+	for i, cmd := range cmds {
+		if i == 0 {
+			if cmd.Stdin == nil {
+				cmd.Stdin = os.Stdin
+			}
+		} else {
+			cmd.Stdin = pipes[i-1].r
+		}
+
+		if i != numsOfCmd-1 {
+			cmd.Writer = pipes[i].w
+		}
+	}
 
 	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		ch.registry.Execute(left)
-		pw.Close()
-	}()
+	wg.Add(numsOfCmd)
 
-	ch.registry.Execute(right)
-	pr.Close()
+	for i, cmd := range cmds {
+		go func(i int, c *domains.Command) {
+			defer wg.Done()
+			ch.registry.Execute(c)
+
+			if i < numsOfCmd-1 {
+				pipes[i].w.Close()
+			}
+		}(i, cmd)
+	}
 
 	wg.Wait()
+	for _, p := range pipes {
+		p.r.Close()
+	}
 }
