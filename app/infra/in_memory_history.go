@@ -3,6 +3,7 @@ package infra
 type HistoryStore interface {
 	Add(line string)
 	List() []string
+	Get(idx int) string
 }
 
 type InMemoryHistory struct {
@@ -21,4 +22,12 @@ func (h *InMemoryHistory) Add(line string) {
 
 func (h *InMemoryHistory) List() []string {
 	return h.lines
+}
+
+func (h *InMemoryHistory) Get(idx int) string {
+	if idx < 0 || idx >= len(h.lines) {
+		return ""
+	}
+
+	return h.lines[idx]
 }

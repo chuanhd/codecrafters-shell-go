@@ -2,6 +2,7 @@ package domains
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/codecrafters-io/shell-starter-go/app/infra"
 )
@@ -21,9 +22,18 @@ func (cmd *HistoryCommand) GetName() string {
 }
 
 func (c *HistoryCommand) Execute(cmd *Command) {
-	// Add itself at last
 	c.history.Add(cmd.RawContent)
-	for i, line := range c.history.List() {
-		fmt.Fprintf(cmd.Writer, "%d  %s\n", i+1, line)
+
+	var total = len(c.history.List())
+	var limit = total
+	if len(cmd.Args) > 0 {
+		if limitArg, err := strconv.Atoi(cmd.Args[0]); err == nil {
+			limit = limitArg
+		}
+	}
+	// Add itself at last
+	for i := total - limit; i < total; i++ {
+		line := c.history.Get(i)
+		fmt.Fprintf(cmd.Writer, "%d  %s\n", i, line)
 	}
 }
