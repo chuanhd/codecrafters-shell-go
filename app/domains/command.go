@@ -8,6 +8,7 @@ type Command struct {
 	Name        string
 	Args        []string
 	RedirectArg RedirectArgument
+	RawContent  string
 
 	Stdin     io.Reader
 	Writer    io.Writer

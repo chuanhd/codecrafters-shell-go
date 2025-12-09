@@ -204,6 +204,7 @@ func (parser *CommandParser) ParseCommand() ([]domains.Command, error) {
 			Writer:      os.Stdout,
 			ErrWriter:   os.Stderr,
 			RedirectArg: *redirectArgs,
+			RawContent:  strings.TrimSpace(part),
 		}
 
 		cmds = append(cmds, cmd)

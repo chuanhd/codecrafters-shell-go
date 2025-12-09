@@ -7,6 +7,7 @@ import (
 
 	"github.com/chzyer/readline"
 	"github.com/codecrafters-io/shell-starter-go/app/domains"
+	"github.com/codecrafters-io/shell-starter-go/app/infra"
 	"github.com/codecrafters-io/shell-starter-go/app/utils"
 )
 
@@ -66,13 +67,20 @@ func (b *bellCompleter) Do(line []rune, pos int) ([][]rune, int) {
 }
 
 type CommandHandler struct {
-	registry *CommandRegistry
+	registry     *CommandRegistry
+	historyStore infra.HistoryStore
 }
 
-func NewCommandHandler(registry *CommandRegistry) *CommandHandler {
+func NewCommandHandler(registry *CommandRegistry, historyStore infra.HistoryStore) *CommandHandler {
 	return &CommandHandler{
-		registry: registry,
+		registry:     registry,
+		historyStore: historyStore,
 	}
+}
+
+func (ch *CommandHandler) executeAndStoreHistory(cmd *domains.Command) {
+	ch.registry.Execute(cmd)
+	ch.historyStore.Add(cmd.RawContent)
 }
 
 func (ch *CommandHandler) HandleCommand() {
@@ -109,7 +117,7 @@ func (ch *CommandHandler) HandleCommand() {
 		case 0:
 			continue
 		case 1:
-			ch.registry.Execute(&cmds[0])
+			ch.executeAndStoreHistory(&cmds[0])
 		default:
 			cmdPtrs := make([]*domains.Command, len(cmds))
 			for i := range cmds {
@@ -154,7 +162,7 @@ func (ch *CommandHandler) runPipeline(cmds []*domains.Command) {
 	for i, cmd := range cmds {
 		go func(i int, c *domains.Command) {
 			defer wg.Done()
-			ch.registry.Execute(c)
+			ch.executeAndStoreHistory(c)
 
 			if i < numsOfCmd-1 {
 				pipes[i].w.Close()

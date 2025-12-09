@@ -6,6 +6,7 @@ import (
 
 	"github.com/codecrafters-io/shell-starter-go/app/application"
 	"github.com/codecrafters-io/shell-starter-go/app/domains"
+	"github.com/codecrafters-io/shell-starter-go/app/infra"
 )
 
 // Ensures gofmt doesn't remove the "fmt" and "os" imports in stage 1 (feel free to remove this!)
@@ -18,7 +19,8 @@ func main() {
 
 func handleCommand() {
 	cmdRegistry := application.NewCommandRegistry()
-	cmdHandler := application.NewCommandHandler(cmdRegistry)
+	history := infra.NewInMemoryHistory()
+	cmdHandler := application.NewCommandHandler(cmdRegistry, history)
 
 	// Register the `exit` command
 	exitCmd := &domains.ExitCommand{}
@@ -34,7 +36,7 @@ func handleCommand() {
 	cdCmd := &domains.CdCommand{}
 	cmdRegistry.Register(cdCmd)
 
-	historyCmd := &domains.HistoryCommand{}
+	historyCmd := domains.NewHistoryCommand(history)
 	cmdRegistry.Register(historyCmd)
 
 	// Register the `type` command
