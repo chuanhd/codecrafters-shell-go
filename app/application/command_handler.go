@@ -79,8 +79,8 @@ func NewCommandHandler(registry *CommandRegistry, historyStore infra.HistoryStor
 }
 
 func (ch *CommandHandler) executeAndStoreHistory(cmd *domains.Command) {
-	ch.registry.Execute(cmd)
 	ch.historyStore.Add(cmd.RawContent)
+	ch.registry.Execute(cmd)
 }
 
 func (ch *CommandHandler) HandleCommand() {
