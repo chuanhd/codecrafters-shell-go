@@ -69,7 +69,7 @@ func FileExists(filePath string) bool {
 	return false
 }
 
-func OpenRedirectFile(path string, needAppend bool) (*os.File, error) {
+func OpenFile(path string, needAppend bool) (*os.File, error) {
 	flags := os.O_CREATE | os.O_RDWR
 	if needAppend {
 		flags |= os.O_APPEND

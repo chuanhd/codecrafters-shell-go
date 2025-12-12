@@ -32,7 +32,7 @@ func (cr *CommandRegistry) Execute(cmd *domains.Command) {
 	_, redirectArgs := cmd.Args, cmd.RedirectArg
 
 	if redirectArgs.StdOutPath != "" {
-		f, err := utils.OpenRedirectFile(redirectArgs.StdOutPath, redirectArgs.StdOutAppend)
+		f, err := utils.OpenFile(redirectArgs.StdOutPath, redirectArgs.StdOutAppend)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Open target file failed with error: %v\n", err)
 			return
@@ -44,7 +44,7 @@ func (cr *CommandRegistry) Execute(cmd *domains.Command) {
 	}
 
 	if redirectArgs.StdErrPath != "" {
-		f, err := utils.OpenRedirectFile(redirectArgs.StdErrPath, redirectArgs.StdOutAppend)
+		f, err := utils.OpenFile(redirectArgs.StdErrPath, redirectArgs.StdOutAppend)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Open target file failed with error: %v\n", err)
 		}

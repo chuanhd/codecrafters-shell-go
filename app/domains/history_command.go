@@ -24,22 +24,34 @@ func (cmd *HistoryCommand) GetName() string {
 }
 
 func (c *HistoryCommand) Execute(cmd *Command) {
-	if len(cmd.Args) >= 1 && cmd.Args[0] == "-r" {
-		if len(cmd.Args) < 2 {
-			fmt.Fprintln(cmd.Writer, "history: -r requires a file path")
-			return
+	if len(cmd.Args) > 1 {
+		switch cmd.Args[0] {
+		case "-r":
+			if len(cmd.Args) < 2 {
+				fmt.Fprintln(cmd.Writer, "history: -r requires a file path")
+				return
+			}
+
+			path := cmd.Args[1]
+			lines, err := c.readHistoryFile(path)
+			if err != nil {
+				fmt.Fprintf(cmd.Writer, "history: failed to read file '%s': %v\n", path, err)
+				return
+			}
+
+			for _, line := range lines {
+				c.history.Add(line)
+			}
+		case "-w":
+			if len(cmd.Args) < 2 {
+				fmt.Fprintln(cmd.Writer, "history: -w requires a file path")
+				return
+			}
+
+			path := cmd.Args[1]
+			c.writeHistoryFile(path, false)
 		}
 
-		path := cmd.Args[1]
-		lines, err := c.readHistoryFile(path)
-		if err != nil {
-			fmt.Fprintf(cmd.Writer, "history: failed to read file '%s': %v\n", path, err)
-			return
-		}
-
-		for _, line := range lines {
-			c.history.Add(line)
-		}
 		return
 	}
 
@@ -70,4 +82,21 @@ func (c *HistoryCommand) readHistoryFile(path string) ([]string, error) {
 	}
 
 	return lines, nil
+}
+
+func (c *HistoryCommand) writeHistoryFile(path string, needAppend bool) {
+	file, err := utils.OpenFile(path, needAppend)
+
+	if err != nil {
+		return
+	}
+
+	defer file.Close()
+
+	content := strings.Join(c.history.List(), "\n")
+	if content != "" {
+		content += "\n"
+	}
+
+	_, err = file.WriteString(content)
 }
