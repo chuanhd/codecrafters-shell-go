@@ -49,7 +49,16 @@ func (c *HistoryCommand) Execute(cmd *Command) {
 			}
 
 			path := cmd.Args[1]
-			c.writeHistoryFile(path, false)
+			c.writeHistoryFile(c.history.List(), path, false)
+		case "-a":
+			if len(cmd.Args) < 2 {
+				fmt.Fprintln(cmd.Writer, "history: -a requires a file path")
+				return
+			}
+
+			path := cmd.Args[1]
+			c.writeHistoryFile(c.history.List()[c.history.GetLatestFlushedIdx():], path, true)
+			c.history.SetLatestFlushedIdx(len(c.history.List()))
 		}
 
 		return
@@ -84,7 +93,7 @@ func (c *HistoryCommand) readHistoryFile(path string) ([]string, error) {
 	return lines, nil
 }
 
-func (c *HistoryCommand) writeHistoryFile(path string, needAppend bool) {
+func (c *HistoryCommand) writeHistoryFile(lines []string, path string, needAppend bool) {
 	file, err := utils.OpenFile(path, needAppend)
 
 	if err != nil {
@@ -93,7 +102,7 @@ func (c *HistoryCommand) writeHistoryFile(path string, needAppend bool) {
 
 	defer file.Close()
 
-	content := strings.Join(c.history.List(), "\n")
+	content := strings.Join(lines, "\n")
 	if content != "" {
 		content += "\n"
 	}
