@@ -3,10 +3,12 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/codecrafters-io/shell-starter-go/app/application"
 	"github.com/codecrafters-io/shell-starter-go/app/domains"
 	"github.com/codecrafters-io/shell-starter-go/app/infra"
+	"github.com/codecrafters-io/shell-starter-go/app/utils"
 )
 
 // Ensures gofmt doesn't remove the "fmt" and "os" imports in stage 1 (feel free to remove this!)
@@ -20,6 +22,14 @@ func main() {
 func handleCommand() {
 	cmdRegistry := application.NewCommandRegistry()
 	history := infra.NewInMemoryHistory()
+
+	// Load history on start up
+	if histFile := os.Getenv("HISTFILE"); histFile != "" {
+		if lines, err := loadHistoryFromFile(histFile); err == nil {
+			history.Load(lines)
+		}
+	}
+
 	cmdHandler := application.NewCommandHandler(cmdRegistry, history)
 
 	// Register the `exit` command
@@ -50,4 +60,18 @@ func handleCommand() {
 	cmdRegistry.Register(builtInCmd)
 
 	cmdHandler.HandleCommand()
+}
+
+func loadHistoryFromFile(path string) ([]string, error) {
+	content, err := utils.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	lines := strings.Split(content, "\n")
+	if len(lines) > 0 && lines[len(lines)-1] == "" {
+		lines = lines[:len(lines)-1]
+	}
+
+	return lines, nil
 }

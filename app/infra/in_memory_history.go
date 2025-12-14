@@ -1,6 +1,7 @@
 package infra
 
 type HistoryStore interface {
+	Load(lines []string)
 	Add(line string)
 	List() []string
 	Get(idx int) string
@@ -18,6 +19,10 @@ func NewInMemoryHistory() *InMemoryHistory {
 		lines:            make([]string, 0),
 		lastFlushedIndex: 0,
 	}
+}
+
+func (h *InMemoryHistory) Load(lines []string) {
+	h.lines = append(h.lines, lines...)
 }
 
 func (h *InMemoryHistory) Add(line string) {
