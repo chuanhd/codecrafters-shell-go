@@ -17,5 +17,5 @@ type Command struct {
 
 type CommandExecutor interface {
 	GetName() string
-	Execute(cmd *Command)
+	Execute(cmd *Command) error
 }

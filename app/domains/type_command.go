@@ -21,7 +21,7 @@ func (c *TypeCommand) GetName() string {
 	return "type"
 }
 
-func (c *TypeCommand) Execute(cmd *Command) {
+func (c *TypeCommand) Execute(cmd *Command) error {
 	if slices.Contains(c.availableCommands, cmd.Args[0]) {
 		fmt.Fprintf(cmd.Writer, "%s is a shell builtin\n", cmd.Args[0])
 	} else if path, exists := c.findBinInPath(*cmd); exists {
@@ -29,6 +29,8 @@ func (c *TypeCommand) Execute(cmd *Command) {
 	} else {
 		fmt.Fprintf(cmd.Writer, "%s: not found\n", cmd.Args[0])
 	}
+
+	return nil
 }
 
 func (c *TypeCommand) findBinInPath(cmd Command) (string, bool) {

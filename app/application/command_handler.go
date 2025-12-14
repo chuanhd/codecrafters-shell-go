@@ -1,8 +1,10 @@
 package application
 
 import (
+	"errors"
 	"fmt"
 	"os"
+	"strings"
 	"sync"
 
 	"github.com/chzyer/readline"
@@ -80,7 +82,12 @@ func NewCommandHandler(registry *CommandRegistry, historyStore infra.HistoryStor
 
 func (ch *CommandHandler) executeAndStoreHistory(cmd *domains.Command) {
 	ch.historyStore.Add(cmd.RawContent)
-	ch.registry.Execute(cmd)
+	err := ch.registry.Execute(cmd)
+	var exitReq *domains.ExitRequest
+	if errors.As(err, &exitReq) {
+		ch.flushHistory()
+		os.Exit(exitReq.Code)
+	}
 }
 
 func (ch *CommandHandler) HandleCommand() {
@@ -173,5 +180,23 @@ func (ch *CommandHandler) runPipeline(cmds []*domains.Command) {
 	wg.Wait()
 	for _, p := range pipes {
 		p.r.Close()
+	}
+}
+
+func (ch *CommandHandler) flushHistory() {
+	if histFile := os.Getenv("HISTFILE"); histFile != "" {
+		file, err := utils.OpenFile(histFile, false)
+		if err != nil {
+			return
+		}
+
+		defer file.Close()
+
+		content := strings.Join(ch.historyStore.List(), "\n")
+		if content != "" {
+			content += "\n"
+		}
+
+		_, err = file.WriteString(content)
 	}
 }

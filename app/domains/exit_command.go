@@ -1,7 +1,6 @@
 package domains
 
 import (
-	"os"
 	"strconv"
 )
 
@@ -11,13 +10,15 @@ func (c *ExitCommand) GetName() string {
 	return "exit"
 }
 
-func (c *ExitCommand) Execute(cmd *Command) {
+func (c *ExitCommand) Execute(cmd *Command) error {
+	exitCode := 0
 	if len(cmd.Args) > 0 {
-		exitCode, err := strconv.Atoi(cmd.Args[0])
-		if err != nil {
-			exitCode = 0
+		if code, err := strconv.Atoi(cmd.Args[0]); err == nil {
+			exitCode = code
 		}
-		os.Exit(exitCode)
 	}
-	os.Exit(0)
+
+	return &ExitRequest{
+		Code: exitCode,
+	}
 }

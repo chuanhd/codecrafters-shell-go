@@ -11,12 +11,14 @@ func (c *PwdCommand) GetName() string {
 	return "pwd"
 }
 
-func (c *PwdCommand) Execute(cmd *Command) {
+func (c *PwdCommand) Execute(cmd *Command) error {
 	path, err := os.Getwd()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
-		return
+		return err
 	}
 
 	fmt.Fprintln(os.Stdout, path)
+
+	return nil
 }

@@ -10,11 +10,11 @@ func (c *ExternalCommand) GetName() string {
 	return "external-built-in"
 }
 
-func (c *ExternalCommand) Execute(cmd *Command) {
+func (c *ExternalCommand) Execute(cmd *Command) error {
 	externalCmd := exec.Command(cmd.Name, cmd.Args...)
 	externalCmd.Stdout = cmd.Writer
 	externalCmd.Stderr = cmd.ErrWriter
 	externalCmd.Stdin = cmd.Stdin
 
-	externalCmd.Run()
+	return externalCmd.Run()
 }
