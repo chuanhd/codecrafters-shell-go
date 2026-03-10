@@ -34,29 +34,6 @@ const (
 	CharTab         = '\t'
 )
 
-func extractCommandAndArgs(content string) (cmd, argumentStr string) {
-	if len(content) == 0 {
-		return "", ""
-	}
-
-	first := rune(content[0])
-	if first != CharSingleQuote && first != CharDoubleQuote {
-		cmd, argumentStr, _ = strings.Cut(content, " ")
-		return
-	}
-
-	endIdx := strings.IndexRune(content[1:], first)
-	if endIdx == -1 {
-		cmd, argumentStr, _ = strings.Cut(content, " ")
-		return
-	}
-
-	endIdx += 1
-	cmd = content[1:endIdx]
-	argumentStr = content[endIdx+1:]
-	return
-}
-
 func tokenize(s string) ([]string, error) {
 	state := Unquoted
 	var tok []string
@@ -184,14 +161,25 @@ func (parser *CommandParser) ParseCommand() ([]domains.Command, error) {
 	}
 
 	parts := strings.Split(content, "|")
-
 	var cmds []domains.Command
 
 	for _, part := range parts {
-		cmdName, argumentStr := extractCommandAndArgs(strings.TrimSpace(part))
-		args, err := tokenize(argumentStr)
-		redirectArgs, cmdArgs, err := parseCmdAndRedirectArgs(args)
+		part = strings.TrimSpace(part)
+		if part == "" {
+			continue
+		}
 
+		tokens, err := tokenize(part)
+		if err != nil {
+			fmt.Fprint(os.Stderr, "ERROR: "+err.Error())
+			return nil, err
+		}
+		if len(tokens) == 0 {
+			continue
+		}
+
+		cmdName := tokens[0]
+		redirectArgs, cmdArgs, err := parseCmdAndRedirectArgs(tokens[1:])
 		if err != nil {
 			fmt.Fprint(os.Stderr, "ERROR: "+err.Error())
 			return nil, err
@@ -204,9 +192,8 @@ func (parser *CommandParser) ParseCommand() ([]domains.Command, error) {
 			Writer:      os.Stdout,
 			ErrWriter:   os.Stderr,
 			RedirectArg: *redirectArgs,
-			RawContent:  strings.TrimSpace(part),
+			RawContent:  part,
 		}
-
 		cmds = append(cmds, cmd)
 	}
 

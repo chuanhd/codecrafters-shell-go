@@ -19,13 +19,20 @@ type pipeEnds struct {
 }
 
 type bellCompleter struct {
-	inner readline.AutoCompleter
-
-	tabCount int
+	cmdCompleter  readline.AutoCompleter
+	fileCompleter readline.AutoCompleter
+	tabCount      int
 }
 
 func (b *bellCompleter) Do(line []rune, pos int) ([][]rune, int) {
-	items, length := b.inner.Do(line, pos)
+	input := string(line[:pos])
+	var items [][]rune
+	var length int
+	if !isFirstToken(input) {
+		items, length = b.fileCompleter.Do(line, pos)
+	} else {
+		items, length = b.cmdCompleter.Do(line, pos)
+	}
 
 	if len(items) > 1 {
 		b.tabCount += 1
@@ -98,9 +105,11 @@ func (ch *CommandHandler) HandleCommand() {
 	baseCompleter := readline.NewPrefixCompleter(readline.PcItemDynamic(func(string) []string {
 		return allCmds
 	}))
+	fileCompleter := &FileCompleter{}
 
 	completer := &bellCompleter{
-		inner: baseCompleter,
+		cmdCompleter:  baseCompleter,
+		fileCompleter: fileCompleter,
 	}
 
 	rl, err := readline.NewEx(&readline.Config{
@@ -199,4 +208,9 @@ func (ch *CommandHandler) flushHistory() {
 
 		_, err = file.WriteString(content)
 	}
+}
+
+func isFirstToken(input string) bool {
+	fields := strings.Fields(input)
+	return len(fields) <= 1 && !strings.HasSuffix(input, " ")
 }
