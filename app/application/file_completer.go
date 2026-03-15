@@ -19,16 +19,19 @@ func (f *FileCompleter) Do(line []rune, pos int) ([][]rune, int) {
 	parts := strings.Split(input, " ")
 	token := parts[len(parts)-1]
 
-	var dir, prefix string
-	if before, ok := strings.CutSuffix(token, "/"); ok {
-		dir = before
-		if dir == "" {
-			dir = "."
-		}
+	if token == "" {
+		token = "."
+	}
+
+	if strings.HasSuffix(token, "/") {
+		token += "."
+	}
+
+	dir := filepath.Dir(token)
+	prefix := filepath.Base(token)
+
+	if prefix == "." {
 		prefix = ""
-	} else {
-		dir = filepath.Dir(token)
-		prefix = filepath.Base(token)
 	}
 
 	files, err := os.ReadDir(dir)
