@@ -3,6 +3,7 @@ package application
 import (
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 )
 
@@ -47,18 +48,31 @@ func (f *FileCompleter) Do(line []rune, pos int) ([][]rune, int) {
 		}
 	}
 
+	if len(matches) == 0 {
+		return nil, 0
+	}
+
 	var completions [][]rune
-	for _, file := range matches {
-		name := file.Name()
-		suffix := strings.TrimPrefix(name, prefix)
-		if len(matches) == 1 {
+	for _, file := range files {
+		if after, ok := strings.CutPrefix(file.Name(), prefix); ok {
+			suffix := after
+
 			if file.IsDir() {
 				suffix += "/"
-			} else {
-				suffix += " "
 			}
+
+			completions = append(completions, []rune(suffix))
 		}
-		completions = append(completions, []rune(suffix))
+	}
+
+	sort.Slice(completions, func(i, j int) bool {
+		return string(completions[i]) < string(completions[j])
+	})
+
+	if len(completions) == 1 {
+		if !strings.HasSuffix(string(completions[0]), "/") {
+			completions[0] = append(completions[0], ' ')
+		}
 	}
 
 	return completions, len(prefix)

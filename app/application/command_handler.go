@@ -49,11 +49,13 @@ func (b *bellCompleter) Do(line []rune, pos int) ([][]rune, int) {
 			return nil, 0
 		case 2:
 			fmt.Println()
+
+			token := currentToken(string(line[:pos]))
 			for i, m := range items {
 				if i > 0 {
 					fmt.Print(" ")
 				}
-				fmt.Printf("%s%s", string(line), string(m))
+				fmt.Print(token + string(m))
 			}
 
 			fmt.Println()
@@ -73,6 +75,11 @@ func (b *bellCompleter) Do(line []rune, pos int) ([][]rune, int) {
 	b.tabCount = 0
 
 	return items, length
+}
+
+func currentToken(input string) string {
+	parts := strings.Split(input, " ")
+	return parts[len(parts)-1]
 }
 
 type CommandHandler struct {
