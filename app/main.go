@@ -49,6 +49,9 @@ func handleCommand() {
 	historyCmd := domains.NewHistoryCommand(history)
 	cmdRegistry.Register(historyCmd)
 
+	jobsCommand := &domains.JobsCommand{}
+	cmdRegistry.Register(jobsCommand)
+
 	// Register the `type` command
 	// It must be registered last to make sure detect correct supported command
 	// Need to append `type` command itself
