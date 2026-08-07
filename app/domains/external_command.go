@@ -22,7 +22,7 @@ func (c *ExternalCommand) Execute(cmd *Command) error {
 		if err != nil {
 			return err
 		}
-		fmt.Fprintf(os.Stdout, "[1] %d\n", cmd.Name, externalCmd.Process.Pid)
+		fmt.Fprintf(os.Stdout, "[1] %d\n", externalCmd.Process.Pid)
 		return nil
 	} else {
 		externalCmd := exec.Command(cmd.Name, cmd.Args...)
