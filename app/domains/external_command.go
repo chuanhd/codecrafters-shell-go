@@ -17,6 +17,7 @@ func (c *ExternalCommand) Execute(cmd *Command) error {
 	// If lastArg is &, this job will run in background
 	if lastArg == "&" {
 		args := cmd.Args[:len(cmd.Args)]
+		fmt.Println(args)
 		externalCmd := exec.Command(cmd.Name, args...)
 		err := externalCmd.Start()
 		if err != nil {
