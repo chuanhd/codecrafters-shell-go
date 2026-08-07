@@ -2,7 +2,6 @@ package domains
 
 import (
 	"fmt"
-	"os"
 	"os/exec"
 )
 
@@ -13,23 +12,26 @@ func (c *ExternalCommand) GetName() string {
 }
 
 func (c *ExternalCommand) Execute(cmd *Command) error {
-	argsLen := len(cmd.Args)
-	// If lastArg is &, this job will run in background
-	if argsLen > 1 && cmd.Args[argsLen-1] == "&" {
-		args := cmd.Args[:argsLen-1]
-		externalCmd := exec.Command(cmd.Name, args...)
-		err := externalCmd.Start()
-		if err != nil {
-			return err
-		}
-		fmt.Fprintf(os.Stdout, "[1] %d\n", externalCmd.Process.Pid)
-		return nil
+	args := cmd.Args
+	isBackground := len(args) > 0 && args[len(args)-1] == "&"
+
+	if isBackground {
+		args = args[:len(args)-1]
 	}
 
-	externalCmd := exec.Command(cmd.Name, cmd.Args...)
+	externalCmd := exec.Command(cmd.Name, args...)
 	externalCmd.Stdout = cmd.Writer
 	externalCmd.Stderr = cmd.ErrWriter
 	externalCmd.Stdin = cmd.Stdin
 
-	return externalCmd.Run()
+	if err := externalCmd.Start(); err != nil {
+		return err
+	}
+
+	if isBackground {
+		fmt.Fprintf(cmd.Writer, "[1] %d\n", externalCmd.Process.Pid)
+		return nil
+	}
+
+	return externalCmd.Wait()
 }
