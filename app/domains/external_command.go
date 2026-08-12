@@ -13,8 +13,8 @@ func (c *ExternalCommand) GetName() string {
 
 func (c *ExternalCommand) Execute(cmd *Command) error {
 	args := cmd.Args
-	isBackground := len(args) > 0 && args[len(args)-1] == "&"
-
+	isBackground := cmd.IsBackgroundCommand()
+	// fmt.Printf("ExternalCommand args=%#v isBackground=%v\n", args, isBackground)
 	if isBackground {
 		args = args[:len(args)-1]
 	}

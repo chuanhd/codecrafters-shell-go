@@ -85,18 +85,25 @@ func currentToken(input string) string {
 type CommandHandler struct {
 	registry     *CommandRegistry
 	historyStore infra.HistoryStore
+	jobsStore    infra.JobsListingsStore
 }
 
-func NewCommandHandler(registry *CommandRegistry, historyStore infra.HistoryStore) *CommandHandler {
+func NewCommandHandler(registry *CommandRegistry, historyStore infra.HistoryStore, jobsStore infra.JobsListingsStore) *CommandHandler {
 	return &CommandHandler{
 		registry:     registry,
 		historyStore: historyStore,
+		jobsStore:    jobsStore,
 	}
 }
 
 func (ch *CommandHandler) executeAndStoreHistory(cmd *domains.Command) {
 	ch.historyStore.Add(cmd.RawContent)
+	// fmt.Printf("isBackgroundCommand: %v", cmd.IsBackgroundCommand())
+
 	err := ch.registry.Execute(cmd)
+	if err == nil && cmd.IsBackgroundCommand() {
+		ch.jobsStore.Add(1, cmd.RawContent)
+	}
 	var exitReq *domains.ExitRequest
 	if errors.As(err, &exitReq) {
 		ch.flushHistory()

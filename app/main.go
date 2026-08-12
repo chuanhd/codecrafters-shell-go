@@ -22,6 +22,7 @@ func main() {
 func handleCommand() {
 	cmdRegistry := application.NewCommandRegistry()
 	history := infra.NewInMemoryHistory()
+	jobsList := infra.NewInMemoryJobs()
 
 	// Load history on start up
 	if histFile := os.Getenv("HISTFILE"); histFile != "" {
@@ -30,7 +31,7 @@ func handleCommand() {
 		}
 	}
 
-	cmdHandler := application.NewCommandHandler(cmdRegistry, history)
+	cmdHandler := application.NewCommandHandler(cmdRegistry, history, jobsList)
 
 	// Register the `exit` command
 	exitCmd := &domains.ExitCommand{}
@@ -49,7 +50,7 @@ func handleCommand() {
 	historyCmd := domains.NewHistoryCommand(history)
 	cmdRegistry.Register(historyCmd)
 
-	jobsCommand := &domains.JobsCommand{}
+	jobsCommand := domains.NewJobsCommand(jobsList)
 	cmdRegistry.Register(jobsCommand)
 
 	// Register the `type` command

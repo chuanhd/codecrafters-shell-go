@@ -19,3 +19,7 @@ type CommandExecutor interface {
 	GetName() string
 	Execute(cmd *Command) error
 }
+
+func (c *Command) IsBackgroundCommand() bool {
+	return len(c.Args) > 0 && c.Args[len(c.Args)-1] == "&"
+}
