@@ -28,14 +28,14 @@ func (cr *CommandRegistry) Register(executor domains.CommandExecutor) {
 	cr.executors[name] = executor
 }
 
-func (cr *CommandRegistry) Execute(cmd *domains.Command) error {
+func (cr *CommandRegistry) Execute(cmd *domains.Command) (*domains.ExecuteResult, error) {
 	_, redirectArgs := cmd.Args, cmd.RedirectArg
 
 	if redirectArgs.StdOutPath != "" {
 		f, err := utils.OpenFile(redirectArgs.StdOutPath, redirectArgs.StdOutAppend)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Open target file failed with error: %v\n", err)
-			return err
+			return nil, err
 		}
 		defer f.Close()
 		cmd.Writer = f
@@ -47,7 +47,7 @@ func (cr *CommandRegistry) Execute(cmd *domains.Command) error {
 		f, err := utils.OpenFile(redirectArgs.StdErrPath, redirectArgs.StdOutAppend)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Open target file failed with error: %v\n", err)
-			return err
+			return nil, err
 		}
 		defer f.Close()
 		cmd.ErrWriter = f
@@ -68,7 +68,7 @@ func (cr *CommandRegistry) Execute(cmd *domains.Command) error {
 			return builtInExecutor.Execute(cmd)
 		} else {
 			fmt.Fprintf(os.Stdout, "%s: command not found\n", cmd.Name)
-			return nil
+			return nil, nil
 		}
 	} else {
 		return executor.Execute(cmd)

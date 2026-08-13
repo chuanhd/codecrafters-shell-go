@@ -100,9 +100,10 @@ func (ch *CommandHandler) executeAndStoreHistory(cmd *domains.Command) {
 	ch.historyStore.Add(cmd.RawContent)
 	// fmt.Printf("isBackgroundCommand: %v", cmd.IsBackgroundCommand())
 
-	err := ch.registry.Execute(cmd)
+	result, err := ch.registry.Execute(cmd)
 	if err == nil && cmd.IsBackgroundCommand() {
-		ch.jobsStore.Add(1, cmd.RawContent)
+		job := ch.jobsStore.Add(1, cmd.RawContent)
+		fmt.Fprintf(cmd.Writer, "[%d] %d\n", job.JobNumber, result.PID)
 	}
 	var exitReq *domains.ExitRequest
 	if errors.As(err, &exitReq) {

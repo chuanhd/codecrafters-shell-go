@@ -23,20 +23,20 @@ func (cmd *HistoryCommand) GetName() string {
 	return "history"
 }
 
-func (c *HistoryCommand) Execute(cmd *Command) error {
+func (c *HistoryCommand) Execute(cmd *Command) (*ExecuteResult, error) {
 	if len(cmd.Args) > 1 {
 		switch cmd.Args[0] {
 		case "-r":
 			if len(cmd.Args) < 2 {
 				fmt.Fprintln(cmd.Writer, "history: -r requires a file path")
-				return fmt.Errorf("history: -r requires a file path")
+				return NewRandomExecuteResult(), fmt.Errorf("history: -r requires a file path")
 			}
 
 			path := cmd.Args[1]
 			lines, err := c.readHistoryFile(path)
 			if err != nil {
 				fmt.Fprintf(cmd.Writer, "history: failed to read file '%s': %v\n", path, err)
-				return fmt.Errorf("history: failed to read file '%s': %v\n", path, err)
+				return NewRandomExecuteResult(), fmt.Errorf("history: failed to read file '%s': %v\n", path, err)
 			}
 
 			for _, line := range lines {
@@ -45,7 +45,7 @@ func (c *HistoryCommand) Execute(cmd *Command) error {
 		case "-w":
 			if len(cmd.Args) < 2 {
 				fmt.Fprintln(cmd.Writer, "history: -w requires a file path")
-				return fmt.Errorf("history: -w requires a file path")
+				return NewRandomExecuteResult(), fmt.Errorf("history: -w requires a file path")
 			}
 
 			path := cmd.Args[1]
@@ -53,7 +53,7 @@ func (c *HistoryCommand) Execute(cmd *Command) error {
 		case "-a":
 			if len(cmd.Args) < 2 {
 				fmt.Fprintln(cmd.Writer, "history: -a requires a file path")
-				return fmt.Errorf("history: -a requires a file path")
+				return NewRandomExecuteResult(), fmt.Errorf("history: -a requires a file path")
 			}
 
 			path := cmd.Args[1]
@@ -61,7 +61,7 @@ func (c *HistoryCommand) Execute(cmd *Command) error {
 			c.history.SetLatestFlushedIdx(len(c.history.List()))
 		}
 
-		return nil
+		return NewRandomExecuteResult(), nil
 	}
 
 	var total = len(c.history.List())
@@ -77,7 +77,7 @@ func (c *HistoryCommand) Execute(cmd *Command) error {
 		fmt.Fprintf(cmd.Writer, "%d  %s\n", i+1, line)
 	}
 
-	return nil
+	return NewRandomExecuteResult(), nil
 }
 
 func (c *HistoryCommand) readHistoryFile(path string) ([]string, error) {

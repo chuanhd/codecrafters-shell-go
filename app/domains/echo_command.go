@@ -11,7 +11,7 @@ func (c *EchoCommand) GetName() string {
 	return "echo"
 }
 
-func (c *EchoCommand) Execute(cmd *Command) error {
+func (c *EchoCommand) Execute(cmd *Command) (*ExecuteResult, error) {
 	fmt.Fprintln(cmd.Writer, strings.Join(cmd.Args, " "))
-	return nil
+	return NewRandomExecuteResult(), nil
 }

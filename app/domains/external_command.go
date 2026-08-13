@@ -1,7 +1,6 @@
 package domains
 
 import (
-	"fmt"
 	"os/exec"
 )
 
@@ -11,10 +10,9 @@ func (c *ExternalCommand) GetName() string {
 	return "external-built-in"
 }
 
-func (c *ExternalCommand) Execute(cmd *Command) error {
+func (c *ExternalCommand) Execute(cmd *Command) (*ExecuteResult, error) {
 	args := cmd.Args
 	isBackground := cmd.IsBackgroundCommand()
-	// fmt.Printf("ExternalCommand args=%#v isBackground=%v\n", args, isBackground)
 	if isBackground {
 		args = args[:len(args)-1]
 	}
@@ -25,13 +23,12 @@ func (c *ExternalCommand) Execute(cmd *Command) error {
 	externalCmd.Stdin = cmd.Stdin
 
 	if err := externalCmd.Start(); err != nil {
-		return err
+		return NewExecuteResult(externalCmd.Process.Pid), err
 	}
 
 	if isBackground {
-		fmt.Fprintf(cmd.Writer, "[1] %d\n", externalCmd.Process.Pid)
-		return nil
+		return NewExecuteResult(externalCmd.Process.Pid), nil
 	}
 
-	return externalCmd.Wait()
+	return NewExecuteResult(externalCmd.Process.Pid), externalCmd.Wait()
 }

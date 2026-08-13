@@ -20,7 +20,7 @@ type InMemoryJobs struct {
 
 type JobsListingsStore interface {
 	List() []JobItem
-	Add(processId int, cmd string)
+	Add(processId int, cmd string) JobItem
 }
 
 func NewInMemoryJobs() *InMemoryJobs {
@@ -30,7 +30,7 @@ func NewInMemoryJobs() *InMemoryJobs {
 	}
 }
 
-func (h *InMemoryJobs) Add(processId int, cmd string) {
+func (h *InMemoryJobs) Add(processId int, cmd string) JobItem {
 	newJobNumber := h.lastJobNumber + 1
 	newJob := JobItem{
 		JobNumber:  newJobNumber,
@@ -40,6 +40,8 @@ func (h *InMemoryJobs) Add(processId int, cmd string) {
 	}
 	h.jobs = append(h.jobs, newJob)
 	h.lastJobNumber = len(h.jobs)
+
+	return newJob
 }
 
 func (h *InMemoryJobs) List() []JobItem {

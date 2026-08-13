@@ -21,19 +21,19 @@ func (c *JobsCommand) GetName() string {
 	return "jobs"
 }
 
-func (c *JobsCommand) Execute(cmd *Command) error {
+func (c *JobsCommand) Execute(cmd *Command) (*ExecuteResult, error) {
 
 	jobsInBackground := c.jobsList.List()
 
 	if len(jobsInBackground) == 0 {
-		return nil
+		return NewRandomExecuteResult(), nil
 	}
 
 	fmt.Println(formatJobsList(
 		jobsInBackground,
 	))
 
-	return nil
+	return NewRandomExecuteResult(), nil
 }
 
 func formatJobsList(jobs []infra.JobItem) string {
@@ -41,9 +41,11 @@ func formatJobsList(jobs []infra.JobItem) string {
 
 	for index, job := range jobs {
 		item := ""
-		recentMarker := ""
+		recentMarker := " "
 		if index == len(jobs)-1 {
 			recentMarker = "+"
+		} else if index == len(jobs)-2 {
+			recentMarker = "-"
 		}
 		item = fmt.Sprintf("[%d]%s  %-24s %s", job.JobNumber, recentMarker, job.Status, job.CommandStr)
 		result = append(result, item)

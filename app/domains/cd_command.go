@@ -11,13 +11,13 @@ func (c *CdCommand) GetName() string {
 	return "cd"
 }
 
-func (c *CdCommand) Execute(cmd *Command) error {
+func (c *CdCommand) Execute(cmd *Command) (*ExecuteResult, error) {
 	path := cmd.Args[0]
 	if path == "~" {
 		homeDir, _err := os.UserHomeDir()
 		if _err != nil {
 			fmt.Fprintf(os.Stderr, "Failed to get home directory %s\n", _err.Error())
-			return _err
+			return NewRandomExecuteResult(), _err
 		}
 		path = homeDir
 	}
@@ -25,7 +25,7 @@ func (c *CdCommand) Execute(cmd *Command) error {
 	_, err := os.Stat(path)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s: %s: No such file or directory\n", cmd.Name, path)
-		return err
+		return NewRandomExecuteResult(), err
 	}
 
 	err = os.Chdir(path)
@@ -33,5 +33,5 @@ func (c *CdCommand) Execute(cmd *Command) error {
 		fmt.Fprintf(os.Stderr, "Failed to change directory to %s\n", cmd.Args[0])
 	}
 
-	return nil
+	return NewRandomExecuteResult(), nil
 }

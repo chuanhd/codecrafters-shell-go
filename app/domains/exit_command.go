@@ -10,7 +10,7 @@ func (c *ExitCommand) GetName() string {
 	return "exit"
 }
 
-func (c *ExitCommand) Execute(cmd *Command) error {
+func (c *ExitCommand) Execute(cmd *Command) (*ExecuteResult, error) {
 	exitCode := 0
 	if len(cmd.Args) > 0 {
 		if code, err := strconv.Atoi(cmd.Args[0]); err == nil {
@@ -18,7 +18,7 @@ func (c *ExitCommand) Execute(cmd *Command) error {
 		}
 	}
 
-	return &ExitRequest{
+	return NewRandomExecuteResult(), &ExitRequest{
 		Code: exitCode,
 	}
 }
