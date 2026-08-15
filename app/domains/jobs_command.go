@@ -33,6 +33,8 @@ func (c *JobsCommand) Execute(cmd *Command) (*ExecuteResult, error) {
 		jobsInBackground,
 	))
 
+	c.jobsList.RemoveDoneJobs()
+
 	return NewRandomExecuteResult(), nil
 }
 
@@ -47,7 +49,12 @@ func formatJobsList(jobs []infra.JobItem) string {
 		} else if index == len(jobs)-2 {
 			recentMarker = "-"
 		}
-		item = fmt.Sprintf("[%d]%s  %-24s %s", job.JobNumber, recentMarker, job.Status, job.CommandStr)
+		cmdStr := job.CommandStr
+		if job.Status == infra.JobStatusDone {
+			// Remove the trailing ampersand from cmdStr
+			cmdStr = strings.TrimSuffix(cmdStr, "&")
+		}
+		item = fmt.Sprintf("[%d]%s  %-24s %s", job.JobNumber, recentMarker, job.Status, cmdStr)
 		result = append(result, item)
 	}
 

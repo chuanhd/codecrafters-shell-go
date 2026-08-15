@@ -1,9 +1,12 @@
 package infra
 
+import "slices"
+
 type JobStatus string
 
 const (
 	JobStatusRunning JobStatus = "Running"
+	JobStatusDone    JobStatus = "Done"
 )
 
 type JobItem struct {
@@ -21,6 +24,8 @@ type InMemoryJobs struct {
 type JobsListingsStore interface {
 	List() []JobItem
 	Add(processId int, cmd string) JobItem
+	MarkDone(pid int)
+	RemoveDoneJobs()
 }
 
 func NewInMemoryJobs() *InMemoryJobs {
@@ -44,6 +49,21 @@ func (h *InMemoryJobs) Add(processId int, cmd string) JobItem {
 	return newJob
 }
 
+func (h *InMemoryJobs) MarkDone(pid int) {
+	for i := range h.jobs {
+		if h.jobs[i].ProcessId == pid {
+			h.jobs[i].Status = JobStatusDone
+			break
+		}
+	}
+}
+
 func (h *InMemoryJobs) List() []JobItem {
 	return h.jobs
+}
+
+func (h *InMemoryJobs) RemoveDoneJobs() {
+	h.jobs = slices.DeleteFunc(h.jobs, func(job JobItem) bool {
+		return job.Status == JobStatusDone
+	})
 }

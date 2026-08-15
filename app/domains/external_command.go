@@ -23,12 +23,12 @@ func (c *ExternalCommand) Execute(cmd *Command) (*ExecuteResult, error) {
 	externalCmd.Stdin = cmd.Stdin
 
 	if err := externalCmd.Start(); err != nil {
-		return NewExecuteResult(externalCmd.Process.Pid), err
+		return nil, err
 	}
 
 	if isBackground {
-		return NewExecuteResult(externalCmd.Process.Pid), nil
+		return NewExecuteResult(externalCmd.Process.Pid, externalCmd.Wait), nil
 	}
 
-	return NewExecuteResult(externalCmd.Process.Pid), externalCmd.Wait()
+	return NewExecuteResult(externalCmd.Process.Pid, nil), externalCmd.Wait()
 }

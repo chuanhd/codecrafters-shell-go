@@ -98,12 +98,19 @@ func NewCommandHandler(registry *CommandRegistry, historyStore infra.HistoryStor
 
 func (ch *CommandHandler) executeAndStoreHistory(cmd *domains.Command) {
 	ch.historyStore.Add(cmd.RawContent)
-	// fmt.Printf("isBackgroundCommand: %v", cmd.IsBackgroundCommand())
 
 	result, err := ch.registry.Execute(cmd)
-	if err == nil && cmd.IsBackgroundCommand() {
+	if err == nil && cmd.IsBackgroundCommand() && result != nil && result.Wait != nil {
 		job := ch.jobsStore.Add(1, cmd.RawContent)
 		fmt.Fprintf(cmd.Writer, "[%d] %d\n", job.JobNumber, result.PID)
+
+		go func(pid int, wait func() error) {
+			err := wait()
+			if err != nil {
+				return
+			}
+			ch.jobsStore.MarkDone(pid)
+		}(job.ProcessId, result.Wait)
 	}
 	var exitReq *domains.ExitRequest
 	if errors.As(err, &exitReq) {

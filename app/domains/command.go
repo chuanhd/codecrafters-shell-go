@@ -17,7 +17,8 @@ type Command struct {
 }
 
 type ExecuteResult struct {
-	PID int
+	PID  int
+	Wait func() error
 }
 
 type CommandExecutor interface {
@@ -34,12 +35,14 @@ func (c *Command) IsBackgroundCommand() bool {
  */
 func NewRandomExecuteResult() *ExecuteResult {
 	return &ExecuteResult{
-		PID: rand.Int(),
+		PID:  rand.Int(),
+		Wait: nil,
 	}
 }
 
-func NewExecuteResult(pid int) *ExecuteResult {
+func NewExecuteResult(pid int, waitFunc func() error) *ExecuteResult {
 	return &ExecuteResult{
-		PID: pid,
+		PID:  pid,
+		Wait: waitFunc,
 	}
 }
