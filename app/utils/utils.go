@@ -2,10 +2,13 @@ package utils
 
 import (
 	"errors"
+	"fmt"
 	"io/fs"
 	"os"
 	"slices"
 	"strings"
+
+	"github.com/codecrafters-io/shell-starter-go/app/infra"
 )
 
 func ReadFile(path string) (string, error) {
@@ -124,4 +127,27 @@ func LongestCommonPrefix(items [][]rune) []rune {
 	}
 
 	return items[0]
+}
+
+func FormatJobsList(jobs []infra.JobItem) string {
+	result := make([]string, 0)
+
+	for index, job := range jobs {
+		item := ""
+		recentMarker := " "
+		if index == len(jobs)-1 {
+			recentMarker = "+"
+		} else if index == len(jobs)-2 {
+			recentMarker = "-"
+		}
+		cmdStr := job.CommandStr
+		if job.Status == infra.JobStatusDone {
+			// Remove the trailing ampersand from cmdStr
+			cmdStr = strings.TrimSuffix(cmdStr, "&")
+		}
+		item = fmt.Sprintf("[%d]%s  %-24s %s", job.JobNumber, recentMarker, job.Status, cmdStr)
+		result = append(result, item)
+	}
+
+	return strings.Join(result, "\n")
 }

@@ -2,9 +2,9 @@ package domains
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/codecrafters-io/shell-starter-go/app/infra"
+	"github.com/codecrafters-io/shell-starter-go/app/utils"
 )
 
 type JobsCommand struct {
@@ -29,34 +29,11 @@ func (c *JobsCommand) Execute(cmd *Command) (*ExecuteResult, error) {
 		return NewRandomExecuteResult(), nil
 	}
 
-	fmt.Println(formatJobsList(
+	fmt.Println(utils.FormatJobsList(
 		jobsInBackground,
 	))
 
 	c.jobsList.RemoveDoneJobs()
 
 	return NewRandomExecuteResult(), nil
-}
-
-func formatJobsList(jobs []infra.JobItem) string {
-	result := make([]string, 0)
-
-	for index, job := range jobs {
-		item := ""
-		recentMarker := " "
-		if index == len(jobs)-1 {
-			recentMarker = "+"
-		} else if index == len(jobs)-2 {
-			recentMarker = "-"
-		}
-		cmdStr := job.CommandStr
-		if job.Status == infra.JobStatusDone {
-			// Remove the trailing ampersand from cmdStr
-			cmdStr = strings.TrimSuffix(cmdStr, "&")
-		}
-		item = fmt.Sprintf("[%d]%s  %-24s %s", job.JobNumber, recentMarker, job.Status, cmdStr)
-		result = append(result, item)
-	}
-
-	return strings.Join(result, "\n")
 }

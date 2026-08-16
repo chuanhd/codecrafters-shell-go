@@ -113,6 +113,13 @@ func (ch *CommandHandler) executeAndStoreHistory(cmd *domains.Command) {
 			ch.jobsStore.MarkDone(pid)
 		}(job.ProcessId, result.Wait)
 	}
+
+	doneJobs := ch.jobsStore.ListJobsDone()
+	if len(doneJobs) > 0 {
+		fmt.Println(utils.FormatJobsList(doneJobs))
+		ch.jobsStore.RemoveDoneJobs()
+	}
+
 	var exitReq *domains.ExitRequest
 	if errors.As(err, &exitReq) {
 		ch.flushHistory()

@@ -25,6 +25,7 @@ type InMemoryJobs struct {
 
 type JobsListingsStore interface {
 	List() []JobItem
+	ListJobsDone() []JobItem
 	Add(processId int, cmd string) JobItem
 	MarkDone(pid int)
 	RemoveDoneJobs()
@@ -62,6 +63,17 @@ func (h *InMemoryJobs) MarkDone(pid int) {
 
 func (h *InMemoryJobs) List() []JobItem {
 	return h.jobs
+}
+
+func (h *InMemoryJobs) ListJobsDone() []JobItem {
+	var doneJobs []JobItem
+	for _, job := range h.jobs {
+		if job.Status == JobStatusDone {
+			doneJobs = append(doneJobs, job)
+		}
+	}
+
+	return doneJobs
 }
 
 func (h *InMemoryJobs) RemoveDoneJobs() {
