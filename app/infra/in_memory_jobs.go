@@ -19,8 +19,7 @@ type JobItem struct {
 }
 
 type InMemoryJobs struct {
-	jobs          []JobItem
-	lastJobNumber int
+	jobs []JobItem
 }
 
 type JobsListingsStore interface {
@@ -33,13 +32,12 @@ type JobsListingsStore interface {
 
 func NewInMemoryJobs() *InMemoryJobs {
 	return &InMemoryJobs{
-		jobs:          make([]JobItem, 0),
-		lastJobNumber: 0,
+		jobs: make([]JobItem, 0),
 	}
 }
 
 func (h *InMemoryJobs) Add(processId int, cmd string) JobItem {
-	newJobNumber := h.lastJobNumber + 1
+	newJobNumber := len(h.jobs) + 1
 	newJob := JobItem{
 		JobNumber:  newJobNumber,
 		ProcessId:  processId,
@@ -47,7 +45,6 @@ func (h *InMemoryJobs) Add(processId int, cmd string) JobItem {
 		Status:     JobStatusRunning,
 	}
 	h.jobs = append(h.jobs, newJob)
-	h.lastJobNumber = len(h.jobs)
 
 	return newJob
 }
