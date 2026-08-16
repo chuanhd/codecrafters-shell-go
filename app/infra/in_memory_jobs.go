@@ -1,6 +1,8 @@
 package infra
 
-import "slices"
+import (
+	"slices"
+)
 
 type JobStatus string
 

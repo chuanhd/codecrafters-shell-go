@@ -101,7 +101,7 @@ func (ch *CommandHandler) executeAndStoreHistory(cmd *domains.Command) {
 
 	result, err := ch.registry.Execute(cmd)
 	if err == nil && cmd.IsBackgroundCommand() && result != nil && result.Wait != nil {
-		job := ch.jobsStore.Add(1, cmd.RawContent)
+		job := ch.jobsStore.Add(result.PID, cmd.RawContent)
 		fmt.Fprintf(cmd.Writer, "[%d] %d\n", job.JobNumber, result.PID)
 
 		go func(pid int, wait func() error) {
@@ -109,6 +109,7 @@ func (ch *CommandHandler) executeAndStoreHistory(cmd *domains.Command) {
 			if err != nil {
 				return
 			}
+
 			ch.jobsStore.MarkDone(pid)
 		}(job.ProcessId, result.Wait)
 	}
