@@ -1,5 +1,9 @@
 package domains
 
+import (
+	"fmt"
+)
+
 type CompleteCommand struct{}
 
 func NewCompleteCommand() *CompleteCommand {
@@ -11,5 +15,15 @@ func (c *CompleteCommand) GetName() string {
 }
 
 func (c *CompleteCommand) Execute(cmd *Command) (*ExecuteResult, error) {
-	return nil, nil
+	if len(cmd.Args) > 1 {
+		switch cmd.Args[0] {
+		case "-p":
+			specCmd := cmd.Args[1]
+			errStr := fmt.Sprintf("complete: %s: no completion specification", specCmd)
+			fmt.Fprintln(cmd.Writer, errStr)
+			return NewRandomExecuteResult(), fmt.Errorf(errStr)
+		}
+	}
+
+	return NewRandomExecuteResult(), nil
 }
