@@ -23,6 +23,7 @@ func handleCommand() {
 	cmdRegistry := application.NewCommandRegistry()
 	history := infra.NewInMemoryHistory()
 	jobsList := infra.NewInMemoryJobs()
+	completionsStore := infra.NewInMemoryCompletionsStore()
 
 	// Load history on start up
 	if histFile := os.Getenv("HISTFILE"); histFile != "" {
@@ -53,7 +54,7 @@ func handleCommand() {
 	jobsCommand := domains.NewJobsCommand(jobsList)
 	cmdRegistry.Register(jobsCommand)
 
-	completeCommand := domains.NewCompleteCommand()
+	completeCommand := domains.NewCompleteCommand(completionsStore)
 	cmdRegistry.Register(completeCommand)
 
 	// Register the `type` command
